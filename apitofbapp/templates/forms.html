@@ -1,0 +1,557 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <script src="//code.jquery.com/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="{% static 'js/bart.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/imgur.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/npr.js' %}"></script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>APIs to Facebook</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="{% static 'css/plugins/metisMenu/metisMenu.min.css' %}" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/sb-admin-2.css' %}" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="{% static 'font-awesome-4.1.0/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+<script>
+    // This is called with the results from from FB.getLoginStatus().
+    var acctok = "";
+    var uid = "";
+    var ImInterval = 1800000; //30 mins
+    var BartInterval = 900000; //15 mins
+
+    function statusChangeCallback(response) {
+
+        if (response.status === 'connected') {
+            // Logged into your app and Facebook.
+            acctok = response.authResponse.accessToken;
+            uid = response.authResponse.userID;
+            startPage();
+        } else if (response.status === 'not_authorized') {
+            // The person is logged into Facebook, but not your app.
+            document.getElementById('status').innerHTML = 'Please log ' +
+                    'into this app.';
+        } else {
+            // The person is not logged into Facebook, so we're not sure if
+            // they are logged into this app or not.
+            document.getElementById('status').innerHTML = 'Please log ' +
+                    'into Facebook.';
+        }
+    }
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId: '1473533486253770',
+            cookie: true,  // enable cookies to allow the server to access
+            // the session
+            xfbml: true,  // parse social plugins on this page
+            version: 'v2.1' // use version 2.1
+        });
+
+        FB.getLoginStatus(function (response) {
+            statusChangeCallback(response);
+        });
+    };
+    // Load the SDK asynchronously
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    // Here we run a very simple test of the Graph API after login is
+    // successful.  See statusChangeCallback() for when this call is made.
+    function startPage() {
+        FB.api('/me', function (response) {
+            document.getElementById('status').innerHTML =
+                    'Hi, ' + response.name + '!';
+        });
+    }
+    $(document).ready(function () {
+        $('#fb_posttowall').on('click', function () {
+            FB.api('/smellslikecheetos/feed', 'post', {'access_token': acctok, 'message': "cliiiick!"}, function (response) {
+                console.log(response);
+            });
+        });
+        //Post imgur posts to FB
+        $('#post_Imgur_now').on('click', function () {
+            for (var i = 0; i < 10; i++) {
+                FB.api(
+                        "/smellslikecheetos/photos",
+                        "POST", { "url": imgur_json.data[i].link, "message": imgur_json.data[i].title },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#imgur_alert').append('<h5>' + "imgur post " + imgur_json.status + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#imgur_alert').append('<h5>' + "imgure post failed." + imgur_json.status + '</h5>')
+                            }
+                        }
+                );
+            }
+        });
+        function postImgur() {
+            for (var i = 0; i < 10; i++) {
+                FB.api(
+                        "/smellslikecheetos/photos",
+                        "POST", { "url": imgur_json.data[i].link, "message": imgur_json.data[i].title },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#imgur_alert').append('<h5>' + "imgur post " + imgur_json.status + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#imgur_alert').append('<h5>' + "imgure post failed." + imgur_json.status + '</h5>')
+                            }
+                        }
+                );
+            }
+        }
+
+        $("#save_imgur_interval").on('click', function () {
+            var selected_Interval = $('#imgur_interval').val();
+            if (selected_Interval == 'Every 15 minutes') {
+                ImInterval = 900000;
+            }
+            else if (selected_Interval == 'Every 30 minutes') {
+                ImInterval = 1800000;
+            }
+            else if (selected_Interval == 'Every 45 minutes') {
+                ImInterval = 2700000;
+            }
+            else if (selected_Interval == 'Every 60 minutes') {
+                ImInterval = 3600000;
+            }
+            else {
+                ImInterval = 1800000;
+            }
+        });
+        setInterval(postImgur, ImInterval);
+
+        //Post NPR News to FB
+        $('#post_npr_now').on('click', function () {
+            for (var i = 0; i < 10; i++) {
+                FB.api(
+                        "/smellslikecheetos/feed",
+                        "POST", { 'access_token': acctok, "url": npr_json.list.story[i].image[i].src,
+                            "link": npr_json.list.story[i].link[i].$text },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#npr_alert').append('<h5>' + "NPR post ID: " + response.id + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#npr_alert').append('<h5>' + "NPR post failed" + response + '</h5>')
+                            }
+                        }
+                );
+            }
+        });
+
+        function postNPR(){
+            for (var i = 0; i < 10; i++) {
+                FB.api(
+                        "/smellslikecheetos/feed",
+                        "POST", { 'access_token': acctok, "url": npr_json.list.story[i].image[i].src,
+                            "link": npr_json.list.story[i].link[i].$text },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#npr_alert').append('<h5>' + "NPR post ID: " + response.id + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#npr_alert').append('<h5>' + "NPR post failed" + response + '</h5>')
+                            }
+                        }
+                );
+            }
+        }
+        setInterval(postNPR, 3600000);
+
+        //Post Bart Info to FB
+        $('#post_bart_now').on('click', function () {
+
+            var bart_info = "Bart info: " + json_advisory.date + " " + json_advisory.time + " " + json_advisory.bsa.description;
+
+            FB.api(
+                    "/smellslikecheetos/feed",
+                    "POST", { 'access_token': acctok, "message": bart_info },
+                    function (response) {
+                        if (response && !response.error) {
+                            console.log(response);
+                            $('#bart_alert').append('<h5>' + "Bart post ID: " + response.id + '</h5>')
+                        }
+                        else {
+                            console.log(response);
+                            $('#bart_alert').append('<h5>' + "Bart post failed" + response + '</h5>')
+                        }
+                    }
+            );
+
+            var numOfStations = json_RTInfo.station.etd.length;
+            var bart_realtime;
+            for (var i = 0; i < numOfStations; i++) {
+                bart_realtime = json_RTInfo.date + " " + json_RTInfo.station.name + " " + json_RTInfo.station.etd[i].destination
+                        + " in " + json_RTInfo.station.etd[i].estimate[i].minutes + " mins";
+
+                FB.api(
+                        "/smellslikecheetos/feed",
+                        "POST", { 'access_token': acctok, "message": bart_realtime },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#bart_alert').append('<h5>' + "Bart post ID: " + response.id + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#bart_alert').append('<h5>' + "Bart post failed" + response + '</h5>')
+                            }
+                        }
+                );
+            }
+        });
+        function postBartInterval() {
+
+            var bart_info = "Bart info: " + json_advisory.date + " " + json_advisory.time + " " + json_advisory.bsa.description;
+
+            FB.api(
+                    "/smellslikecheetos/feed",
+                    "POST", { 'access_token': acctok, "message": bart_info },
+                    function (response) {
+                        if (response && !response.error) {
+                            console.log(response);
+                            $('#bart_alert').append('<h5>' + "Bart post ID: " + response.id + '</h5>')
+                        }
+                        else {
+                            console.log(response);
+                            $('#bart_alert').append('<h5>' + "Bart post failed" + response + '</h5>')
+                        }
+                    }
+            );
+            var numOfStations = json_RTInfo.station.etd.length;
+            var bart_realtime;
+            for (var i = 0; i < numOfStations; i++) {
+                bart_realtime = json_RTInfo.date + " " + json_RTInfo.station.name + " " + json_RTInfo.station.etd[i].destination
+                        + " " + json_RTInfo.station.etd[i].estimate[i].minutes + "mins";
+
+                FB.api(
+                        "/smellslikecheetos/feed",
+                        "POST", { 'access_token': acctok, "message": bart_realtime },
+                        function (response) {
+                            if (response && !response.error) {
+                                console.log(response);
+                                $('#bart_alert').append('<h5>' + "Bart post ID: " + response.id + '</h5>')
+                            }
+                            else {
+                                console.log(response);
+                                $('#bart_alert').append('<h5>' + "Bart post failed" + response + '</h5>')
+                            }
+                        }
+                );
+            }
+        }
+
+        setInterval(postBartInterval, 900000);
+    });
+</script>
+<div id="wrapper">
+<!-- Navigation -->
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="https://www.facebook.com/smellslikecheetos">Facebook Feeder</a>
+
+        <p class="navbar-header" id="status" style="margin-top: 15px"></p>
+    </div>
+    <!-- /.navbar-header -->
+    <ul class="nav navbar-top-links navbar-right">
+        <div style="margin-top: 14px; margin-right: 10px">
+            <fb:login-button scope="public_profile,email,publish_actions" data-size="medium"
+                             data-auto-logout-link="true"
+                             onlogin="checkLoginState();">
+            </fb:login-button>
+        </div>
+    </ul>
+    <div class="navbar-default sidebar" role="navigation">
+        <div class="sidebar-nav navbar-collapse">
+            <ul class="nav" id="side-menu">
+                <li>
+                    <a class="active" href="{% url "forms" %}">
+                        <i class="fa fa-edit fa-fw"></i> Home</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div id="page-wrapper" style="background: url('{% static 'img/natural_paper.png' %}')">
+<div class="row">
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header">API Feeds</h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Bart Feeds
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form role="form">
+                            <div class="form-group">
+                                <label>Type of Feed</label>
+
+                                <div class="checkbox" id="bart_bsa">
+                                    <label>
+                                        <input type="checkbox" checked value="">BART Service Advisories
+                                    </label>
+                                </div>
+                                <div class="checkbox" id="bart_etd">
+                                    <label>
+                                        <input type="checkbox" checked value="">BART Real Time departure estimates by station
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Travel Direction</label>
+                                <select class="form-control" id="bart_dir">
+                                    <option>North Bound</option>
+                                    <option>South Bound</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Origin</label>
+                                <select class="form-control" id="bart_origin">
+                                    <option>12th St. Oakland City Center</option>
+                                    <option>16 th St. Mission (SF)</option>
+                                    <option>19 th St. Oakland</option>
+                                    <option>24th St. Mission (SF)</option>
+                                    <option>Ashby (Berkeley)</option>
+                                    <option>Balboa Park (SF)</option>
+                                    <option>Bay Fair (San Leandro)</option>
+                                    <option>Castro Valley</option>
+                                    <option>Civic Center (SF)</option>
+                                    <option>Coliseum/Oakland Airport</option>
+                                    <option>Colma</option>
+                                    <option>Concord</option>
+                                    <option>Daly City</option>
+                                    <option>Downtown Berkeley</option>
+                                    <option>Dublin/Pleasanton</option>
+                                    <option>El Cerrito del Norte</option>
+                                    <option>El Cerrito Plaza</option>
+                                    <option>Embarcadero (SF)</option>
+                                    <option>Fremont</option>
+                                    <option>Fruitvale (Oakland)</option>
+                                    <option>Glen Park (SF)</option>
+                                    <option>Hayward</option>
+                                    <option>Lafayette</option>
+                                    <option>Lake Merritt (Oakland)</option>
+                                    <option>MacArthur (Oakland)</option>
+                                    <option>Millbrae</option>
+                                    <option>Montgomery St. (SF)</option>
+                                    <option>North Berkeley</option>
+                                    <option>North Concord/Martinez</option>
+                                    <option>Orinda</option>
+                                    <option>Pittsburg/Bay Point</option>
+                                    <option>Pleasant Hill</option>
+                                    <option>Powell St. (SF)</option>
+                                    <option>Richmond</option>
+                                    <option>Rockridge (Oakland)</option>
+                                    <option>San Bruno</option>
+                                    <option>San Francisco Int'l Airport</option>
+                                    <option>San Leandro</option>
+                                    <option>South Hayward</option>
+                                    <option>South San Francisco</option>
+                                    <option>Union City</option>
+                                    <option>Walnut Creek</option>
+                                    <option>West Dublin</option>
+                                    <option>West Oakland</option>
+                                </select>
+                            </div>
+                            <button type="button" id="bart_save_button" class="btn btn-default">Save</button>
+                            <button type="button" id="post_bart_now" class="btn btn-default">Post now</button>
+                        </form>
+                    </div>
+                    <div class="col-lg-6">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">Bart Post Status</div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div id="bart_alert" class="alert alert-info"></div>
+            </div>
+            <!-- .panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Imgur Feeds
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form role="form">
+                            <div class="form-group">
+                                <label>Set Post Intervals</label>
+                                <select class="form-control" id="imgur_interval">
+                                    <option>Every 15 minutes</option>
+                                    <option>Every 30 minutes</option>
+                                    <option>Every 45 minutes</option>
+                                    <option>Every 60 miuntes</option>
+                                </select>
+                            </div>
+                            <button type="button" id="save_imgur_interval" class="btn btn-default">Save</button>
+                            <button type="button" id="post_Imgur_now" class="btn btn-default">Post now</button>
+                        </form>
+                    </div>
+                    <div class="col-lg-6">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">Imgur Post Status</div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div id="imgur_alert" class="alert alert-info"></div>
+            </div>
+            <!-- .panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                NPR Feeds
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form role="form">
+                            <div class="form-group">
+                                <label>News</label>
+
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" checked value="">News
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" checked value="">US
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" checked value="">Technology
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" checked value="">World
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" value="">All feeds Off
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-default">Save</button>
+                            <button type="button" id="post_npr_now" class="btn btn-default">Post now</button>
+                        </form>
+                    </div>
+                    <div class="col-lg-6">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">NPR Post Status</div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div id="npr_alert" class="alert alert-info"></div>
+            </div>
+            <!-- .panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+</div>
+</div>
+</div>
+</div>
+<!-- jQuery Version 1.11.0 -->
+{#<script src="{% static 'js/jquery-1.11.0.js' %}"></script>#}
+<script src="//code.jquery.com/jquery-1.11.1.js"></script>
+
+<script type="text/javascript" src="{% static 'js/jquery.xml2json.js' %}"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+<!-- Metis Menu Plugin JavaScript -->
+<script src="{% static 'js/plugins/metisMenu/metisMenu.min.js' %}"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="{% static 'js/sb-admin-2.js' %}"></script>
+
+</body>
+
+</html>
