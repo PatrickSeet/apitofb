@@ -40,6 +40,9 @@
 
 <body>
 <script>
+    // You should move all of this into an external javascript file.
+    // Would make sense to put the different "postTo" functions in your separate javascript files for each service
+
     // This is called with the results from from FB.getLoginStatus().
     var acctok = "";
     var uid = "";
@@ -107,6 +110,9 @@
                 FB.api(
                         "/smellslikecheetos/photos",
                         "POST", { "url": imgur_json.data[i].link, "message": imgur_json.data[i].title },
+                        // For most of these POSTs, it would make more sense to create the var message = "imgur post " + imgur_json.status
+                        // Then afterward only have one line that says $('#imgur_alert').append('<h5>' + message + '</h5>')
+                        // This applies for multiple scenarios in this file
                         function (response) {
                             if (response && !response.error) {
                                 console.log(response);
@@ -139,6 +145,8 @@
             }
         }
 
+        // Would it make more sense to have the dropdown's value be the interval amount while the display value is the same?
+        // This way you can just use the value instaed of having this if/else if clauses
         $("#save_imgur_interval").on('click', function () {
             var selected_Interval = $('#imgur_interval').val();
             if (selected_Interval == 'Every 15 minutes') {
