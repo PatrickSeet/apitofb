@@ -10,6 +10,20 @@ var formDirection;
         formDirection = $("#bart_dir option:selected").text();
 //        alert(testStartStation);
 //        alert(testDirection);
+
+        // Can find a better way to remove this large if/else if block
+        // What if instead you had a large dictionary that mapped 'verbose name' to 'abbreviated' name
+        // Here's a short example
+        var stations = {
+            '12th St. Oakland City Center': '12th',
+            '16th St. Mission (SF)': '16th'
+        }
+        
+        // Then you can just do
+        startingStation = stations[formStartStation]
+        
+        // ^ This reduces a lot of lines and code and is much neater!
+        
         if (formStartStation == '12th St. Oakland City Center') {
             startingStation = '12th';
         }
