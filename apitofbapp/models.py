@@ -10,16 +10,18 @@ class FacebookStatus(models.Model):
         verbose_name_plural = 'Facebook Statuses'
         ordering = ['publish_timestamp']
 
+    DRAFT = 'draft'
+    APPROVED = 'approved'
     STATUS = (
-        ('draft', 'Draft'),
-        ('approved', 'Approved'),
+        (DRAFT, 'Draft'),
+        (APPROVED, 'Approved'),
     )
     status = models.CharField(max_length=255,
-        choices=STATUS, default=STATUS[0][0])
+        choices=STATUS, default=DRAFT)
     publish_timestamp = models.DateTimeField(null=True, blank=True)
     author = models.ForeignKey(User)
     message = models.TextField(max_length=255)
     link = models.URLField(null=True, blank=True)
 
     def __unicode__(self):
-        return self.message
+        return u"{}".format(self.message)
